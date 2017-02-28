@@ -1,0 +1,103 @@
+<?php
+
+Class m_user extends CI_Model {
+
+	function lihat_profil($id){
+		$this->db->select("*");
+		$this->db->where('id_karyawan',$id);
+        $this->db->from("tb_user");
+        return $this->db->get()->result();
+	}
+
+	function edit_profil($data,$id){
+		$this->db->where('id_karyawan', $id);
+        $this->db->update('tb_user', $data);
+	}
+
+	function show_room(){
+		$this->db->select("*");
+		$this->db->from("tb_ruang");
+        return $this->db->get()->result();
+	}
+
+	function show_email(){
+		$this->db->select("id_karyawan,email");
+		$this->db->from("tb_user");
+        return $this->db->get()->result();
+	}
+
+	function insert_booking($tablename,$data){
+		$this->db->insert("$tablename", $data);
+	}
+
+	function cancel_booking($tablename,$columnn,$id){
+		$this->db->where("$columnn", $id);
+        $this->db->delete("$tablename");
+	}
+
+	function update_status_booking($id){
+		$this->db->set('status', 'Canceled');
+		$this->db->where('id_booking', $id);
+		$this->db->update('tb_booking'); 
+	}
+
+	function show_booking($id){
+		$sql = "SELECT b.id_booking as id_booking,a.id_det_booking as id_det_booking,a.tanggal_psn as tgl_psn,a.tanggal_meeting as tgl_meeting,SUBSTR(a.jam_mulai,1,5) as jam_mulai,SUBSTR(a.jam_akhir,1,5) as jam_akhir, d.nama_ruang as ruang,a.topik as topik
+			FROM tb_det_booking a
+			INNER JOIN tb_booking b
+			ON a.id_det_booking = b.id_det_booking
+			INNER JOIN tb_ruang d
+			ON a.id_ruang = d.id_ruang
+			INNER JOIN tb_user e
+			ON b.id_karyawan = e.id_karyawan
+			where a.id_det_booking = $id";
+
+		return $this->db->query($sql)->result();
+	}
+
+	function show_email_booking($id_booking){
+		$sql = "SELECT a.email as email,b.id_karyawan as id_karyawan
+				FROM tb_user a
+				INNER JOIN tb_peserta b
+				ON a.id_karyawan = b.id_karyawan
+				WHERE b.id_booking = $id_booking";
+		return $this->db->query($sql)->result();
+	}
+
+	function update_schedule($tablename,$columnn_id,$id,$data){
+		$this->db->where("$columnn_id", $id);
+		$this->db->update("$tablename", $data); 
+	}
+
+	function cleansing_peserta($id){
+		$this->db->where('id_booking', $id);
+        $this->db->delete('tb_peserta');
+	}
+
+	function select_max_id($tablename,$columnid){
+		$this->db->select_max("$columnid");
+        $query = $this->db->get("$tablename")->row_array();
+        $id = $query["$columnid"];
+        if ($id == null) {
+            $id = 1;
+        } else {
+            $id = 1 + $query["$columnid"];
+        }
+        return $id;
+	}
+
+	function show_history($id){
+	$sql = "SELECT b.id_det_booking,d.nama_ruang as ruang,a.tanggal_psn as tgl_psn,a.tanggal_meeting as tgl_meeting,CONCAT(SUBSTR(a.jam_mulai,1,5),'-',SUBSTR(a.jam_akhir,1,5)) as waktu,b.status as status,b.id_booking as id_booking
+			FROM tb_det_booking a
+			INNER JOIN tb_booking b
+			ON a.id_det_booking = b.id_det_booking
+			INNER JOIN tb_ruang d
+			ON a.id_ruang = d.id_ruang
+			INNER JOIN tb_user e
+			ON b.id_karyawan = e.id_karyawan
+			where b.id_karyawan = $id";
+
+		return $this->db->query($sql)->result();
+	}
+
+}
